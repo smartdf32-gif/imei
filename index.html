@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IMEI Smart</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IMEI Smart">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{--az:#1d4ed8;--az2:#1e40af;--bg:#f1f5f9;--bd:#cbd5e1;--tx:#0f172a;--mu:#64748b;--ok:#15803d;--er:#b91c1c}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:72px}
+  header{background:var(--az);color:#fff;padding:14px 16px;font-weight:700;font-size:17px;position:sticky;top:0;z-index:5}
+  header small{display:block;font-weight:400;opacity:.85;font-size:12px}
+  main{padding:12px;max-width:640px;margin:0 auto}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);display:flex;z-index:6}
+  nav button{flex:1;border:0;background:none;padding:12px 4px;font-size:13px;color:var(--mu);font-weight:600}
+  nav button.on{color:var(--az);border-top:3px solid var(--az);padding-top:9px}
+  .card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:8px 0 3px}
+  input,select,textarea{width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;font-size:16px;background:#fff;font-family:inherit}
+  input.bad{border-color:var(--er)} input.good{border-color:var(--ok)}
+  .row{display:flex;gap:8px}.row>*{flex:1}
+  button.btn{background:var(--az);color:#fff;border:0;border-radius:10px;padding:13px;font-size:16px;font-weight:700;width:100%;margin-top:10px}
+  button.btn:disabled{opacity:.5}
+  button.sec{background:#fff;color:var(--az);border:1px solid var(--az)}
+  button.red{background:var(--er)}
+  .unit{border-left:4px solid var(--az)}
+  .unit h4{margin:0 0 4px;font-size:14px}
+  .thumb{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);background:#e2e8f0}
+  .hint{font-size:12px;color:var(--mu);margin-top:4px}
+  .ok{color:var(--ok)} .er{color:var(--er)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700}
+  .b-est{background:#dcfce7;color:#166534}.b-ven{background:#dbeafe;color:#1e40af}.b-out{background:#fee2e2;color:#991b1b}
+  .item{display:flex;gap:10px;align-items:flex-start}
+  .item .info{flex:1;min-width:0;font-size:14px}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .chips{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+  .chip{padding:7px 12px;border:1px solid var(--bd);border-radius:99px;background:#fff;font-size:13px}
+  .chip.on{background:var(--az);color:#fff;border-color:var(--az)}
+  .num{font-size:28px;font-weight:800;color:var(--az)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .grid3 div{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 4px;font-size:12px;color:var(--mu)}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:flex-end;z-index:20}
+  .modal.show{display:flex}
+  .sheet{background:#fff;border-radius:18px 18px 0 0;padding:16px;width:100%;max-height:88vh;overflow:auto}
+  .toast{position:fixed;left:12px;right:12px;bottom:84px;background:#0f172a;color:#fff;padding:12px;border-radius:10px;font-size:14px;display:none;z-index:30}
+  .hide{display:none}
+  table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 4px;border-bottom:1px solid #e2e8f0}td:last-child{text-align:right;font-weight:700}
+</style>
+</head>
+<body>
+<header>Controle de Celulares<small>Smart Soluções · controle por IMEI</small></header>
+<main>
+
+<section id="t-cad">
+  <div class="card">
+    <label>Marca / Modelo</label>
+    <input id="modelo" list="dl-modelo" placeholder="Ex.: iPhone 15 128GB" autocomplete="off">
+    <datalist id="dl-modelo"></datalist>
+    <div class="row">
+      <div><label>Cor</label><input id="cor" list="dl-cor" placeholder="Ex.: Preto" autocomplete="off"><datalist id="dl-cor"></datalist></div>
+      <div><label>Condição</label><select id="cond"><option>Novo</option><option>Seminovo</option></select></div>
+    </div>
+    <div class="row">
+      <div><label>Fornecedor</label>
+        <select id="forn"></select>
+        <div class="hint"><a href="#" id="newSup">+ Cadastrar novo fornecedor</a></div></div>
+      <div><label>Nota / Compra</label><input id="nf" placeholder="Nº da nota (opcional)"></div>
+    </div>
+    <label>Quantidade de aparelhos (mesmo modelo e cor)</label>
+    <input id="qtd" type="number" inputmode="numeric" min="1" max="50" value="1">
+    <div class="hint">Cada aparelho recebe o próprio IMEI e a própria foto. Se chegaram 3 pretos, coloque 3.</div>
+  </div>
+  <div id="units"></div>
+  <div class="card"><label>Observação (opcional)</label><input id="obs" placeholder="Ex.: caixa lacrada"></div>
+  <div id="errs" class="er" style="font-size:14px;margin:6px 2px"></div>
+  <button class="btn" id="save">Salvar aparelhos</button>
+</section>
+
+<section id="t-est" class="hide">
+  <input id="q" placeholder="Buscar por IMEI, modelo, cor, cliente, pedido…" inputmode="search">
+  <div class="chips" id="chips"></div>
+  <div id="list"></div>
+</section>
+
+<section id="t-res" class="hide">
+  <div class="grid3" id="kpis"></div>
+  <div class="card" style="margin-top:10px"><b>Estoque por modelo e cor</b><table id="stk"></table></div>
+  <div class="card"><b>Alertas</b><div class="hint">Situações para conferir: IMEI vendido que não estava cadastrado, IMEI repetido, etc.</div><div id="alerts"></div></div>
+</section>
+
+<section id="t-cfg" class="hide">
+  <div class="card">
+    <b>Conexão com o Bling</b>
+    <div id="bstat" class="hint" style="font-size:14px;margin:6px 0"></div>
+    <div id="credBox">
+      <label>Client ID do aplicativo Bling</label><input id="cid" autocomplete="off">
+      <label>Client Secret</label><input id="csec" type="password" autocomplete="off">
+      <div class="hint">No Bling: Preferências → Área do Desenvolvedor → criar aplicativo (API v3). Em “Link de redirecionamento” coloque exatamente:</div>
+      <input id="redir" readonly onclick="this.select()">
+      <div class="hint">Permissão necessária: Pedidos de Venda (somente leitura).</div>
+    </div>
+    <button class="btn" id="bconn">Conectar ao Bling</button>
+  </div>
+  <div class="card">
+    <b>Sincronização das vendas</b>
+    <div class="hint" id="sstat" style="margin:6px 0;font-size:14px"></div>
+    <button class="btn" id="sync">Sincronizar agora</button>
+    <div class="row"><button class="btn sec" id="sync30">Rever últimos 30 dias</button><button class="btn sec" id="auto">Ativar automático</button></div>
+    <div class="hint">Automático: confere os pedidos novos a cada 10 minutos e marca como vendido o aparelho cujo IMEI estiver na descrição da venda.</div>
+  </div>
+  <div class="card">
+    <b>Fornecedores</b>
+    <div id="suppliers" style="margin-top:6px"></div>
+    <button class="btn sec" onclick="editSupplier(0)">+ Novo fornecedor</button>
+  </div>
+  <div class="card">
+    <b>Seus arquivos</b>
+    <div style="margin-top:8px"><a id="lsheet" target="_blank">Abrir planilha no Google</a></div>
+    <div style="margin-top:8px"><a id="lfolder" target="_blank">Abrir pasta de fotos no Drive</a></div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-t="cad" class="on">Cadastrar</button>
+  <button data-t="est">Estoque</button>
+  <button data-t="res">Resumo</button>
+  <button data-t="cfg">Config</button>
+</nav>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const API = 'https://script.google.com/macros/s/AKfycbwBbaQb0ghC7iE-5Ey7zR8JNMqN2yBgDzLgZKIgEnM6ABQoVbrLJ6TFjILnCSEmm3ycVQ/exec';
+function getKey() { try { return localStorage.getItem('imei_key') || ''; } catch (e) { return ''; } }
+function askKey(msg) {
+  const k = prompt(msg || 'Digite a chave de acesso do app:');
+  if (!k) throw new Error('Chave não informada.');
+  try { localStorage.setItem('imei_key', k.trim()); } catch (e) {}
+}
+async function call(fn, ...a) {
+  if (!getKey()) askKey();
+  for (let t = 0; t < 2; t++) {
+    const r = await fetch(API, { method: 'POST', body: JSON.stringify({ k: getKey(), fn: fn, args: a }) });
+    const j = await r.json();
+    if (j.ok) return j.data;
+    if (j.error === 'CHAVE_INVALIDA' && t === 0) { askKey('Chave incorreta. Digite de novo:'); continue; }
+    throw new Error(j.error);
+  }
+}
+function toast(m, ms) { const t = $('#toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', ms || 3500); }
+function luhn(s) {
+  if (!/^\d{15}$/.test(s)) return false;
+  let sum = 0;
+  for (let i = 0; i < 15; i++) { let d = +s[14 - i]; if (i % 2) { d *= 2; if (d > 9) d -= 9; } sum += d; }
+  return sum % 10 === 0;
+}
+const THUMB = 'https:' + '/' + '/drive.google.com/thumbnail?id=';
+const digits = s => String(s || '').replace(/\D/g, '');
+
+/* ----- abas ----- */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
+  ['cad', 'est', 'res', 'cfg'].forEach(t => $('#t-' + t).classList.toggle('hide', t !== b.dataset.t));
+  if (b.dataset.t === 'est') loadList();
+  if (b.dataset.t === 'res') loadSummary();
+  if (b.dataset.t === 'cfg') loadStatus();
+  window.scrollTo(0, 0);
+});
+
+/* ----- cadastro ----- */
+let units = [];
+function fillList(id, arr) { $(id).innerHTML = arr.map(x => '<option value="' + esc(x) + '">').join(''); }
+function renderUnits() {
+  const n = Math.max(1, Math.min(50, parseInt($('#qtd').value, 10) || 1));
+  while (units.length < n) units.push({ i1: '', i2: '', photo: '', thumb: '', note: '' });
+  units.length = n;
+  $('#units').innerHTML = units.map((u, i) => `
+    <div class="card unit">
+      <h4>Aparelho ${i + 1} de ${n}</h4>
+      <div class="item">
+        <div style="flex:1">
+          <label>IMEI 1 (obrigatório)</label>
+          <input data-i="${i}" data-k="i1" inputmode="numeric" maxlength="17" placeholder="15 números" value="${esc(u.i1)}">
+          <label>IMEI 2 (se tiver)</label>
+          <input data-i="${i}" data-k="i2" inputmode="numeric" maxlength="17" placeholder="15 números" value="${esc(u.i2)}">
+        </div>
+        <div style="text-align:center">
+          <img class="thumb ${u.thumb ? '' : 'hide'}" id="th${i}" src="${u.thumb}">
+          <label class="chip" style="display:block;margin-top:6px;text-align:center">📷 Foto
+            <input type="file" accept="image/${'*'}" capture="environment" class="hide" onchange="onPhoto(${i},this.files[0])">
+          </label>
+        </div>
+      </div>
+      <div class="hint" id="nt${i}">${esc(u.note || 'Tire a foto da etiqueta/caixa: o app tenta ler o IMEI sozinho.')}</div>
+    </div>`).join('');
+  document.querySelectorAll('#units input[data-k]').forEach(el => { paint(el); el.oninput = () => { units[el.dataset.i][el.dataset.k] = digits(el.value); paint(el); }; });
+}
+function paint(el) {
+  const v = digits(el.value);
+  el.classList.toggle('good', luhn(v)); el.classList.toggle('bad', v.length >= 15 && !luhn(v));
+}
+$('#qtd').oninput = renderUnits;
+
+async function onPhoto(i, file) {
+  if (!file) return;
+  const nt = $('#nt' + i);
+  nt.textContent = 'Processando a foto…';
+  try {
+    const bmp = await createImageBitmap(file);
+    let lidos = [];
+    if ('BarcodeDetector' in window) {
+      try {
+        const codes = await new BarcodeDetector().detect(bmp);
+        lidos = [...new Set(codes.map(c => digits(c.rawValue)).filter(luhn))];
+      } catch (e) {}
+    }
+    const k = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+    const url = cv.toDataURL('image/jpeg', 0.75);
+    const u = units[i];
+    u.photo = url.split(',')[1]; u.thumb = url;
+    let msg = 'Foto salva.';
+    if (lidos.length) {
+      const taken = new Set(units.flatMap((x, j) => j === i ? [] : [x.i1, x.i2]));
+      lidos = lidos.filter(x => !taken.has(x));
+      if (!u.i1 && lidos[0]) u.i1 = lidos.shift();
+      if (!u.i2 && lidos[0] && lidos[0] !== u.i1) u.i2 = lidos.shift();
+      msg = 'Foto salva e IMEI lido pela câmera. Confira os números.';
+    } else msg = 'Foto salva. Não consegui ler o código de barras: digite o IMEI.';
+    u.note = msg;
+    const keepScroll = window.scrollY;
+    renderUnits(); window.scrollTo(0, keepScroll);
+  } catch (e) { nt.textContent = 'Não consegui processar a foto: ' + e.message; }
+}
+
+$('#save').onclick = async () => {
+  const b = $('#save'); $('#errs').textContent = '';
+  b.disabled = true; b.textContent = 'Salvando…';
+  try {
+    const r = await call('saveBatch', {
+      modelo: $('#modelo').value, cor: $('#cor').value, cond: $('#cond').value, forn: $('#forn').value,
+      nf: $('#nf').value, obs: $('#obs').value,
+      units: units.map(u => ({ imei1: u.i1, imei2: u.i2, photo: u.photo }))
+    });
+    if (!r.ok) { $('#errs').innerHTML = r.errors.map(esc).join('<br>'); window.scrollTo(0, document.body.scrollHeight); }
+    else {
+      toast(r.count + ' aparelho(s) salvo(s) ✔');
+      units = []; $('#qtd').value = 1; $('#obs').value = '';
+      renderUnits(); initLists(); window.scrollTo(0, 0);
+    }
+  } catch (e) { $('#errs').textContent = 'Erro: ' + e.message; }
+  b.disabled = false; b.textContent = 'Salvar aparelhos';
+};
+
+async function initLists() {
+  try {
+    const d = await call('getInit');
+    fillList('#dl-modelo', d.modelos); fillList('#dl-cor', d.cores);
+    setSuppliers(d.fornecedores);
+    paintStatus(d.status);
+  } catch (e) { toast('Erro ao carregar: ' + e.message, 6000); }
+}
+
+/* ----- fornecedores ----- */
+let sups = [];
+function setSuppliers(list, select) {
+  sups = list || [];
+  const cur = select || $('#forn').value;
+  $('#forn').innerHTML = '<option value="">— escolher fornecedor —</option>' +
+    sups.map(s => `<option value="${esc(s.nome)}">${esc(s.nome)}</option>`).join('');
+  if (cur && sups.some(s => s.nome === cur)) $('#forn').value = cur;
+  $('#suppliers').innerHTML = sups.length ? sups.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding:8px 0;font-size:14px">
+      <div><b>${esc(s.nome)}</b>${s.tel ? '<div class="hint">' + esc(s.tel) + '</div>' : ''}</div>
+      <span class="chip" onclick="editSupplier(${s.row})">Editar</span></div>`).join('')
+    : '<div class="hint">Nenhum fornecedor cadastrado ainda.</div>';
+}
+$('#newSup').onclick = e => { e.preventDefault(); editSupplier(0, true); };
+function editSupplier(row, fromCad) {
+  window.__delOk = 0;
+  const s = sups.find(x => x.row === row) || { nome: '', tel: '', contato: '', obs: '' };
+  openModal(`
+    <b style="font-size:17px">${row ? 'Editar fornecedor' : 'Novo fornecedor'}</b>
+    <label>Nome do fornecedor</label><input id="sn" value="${esc(s.nome)}" autocomplete="off">
+    <label>Telefone / WhatsApp</label><input id="st" value="${esc(s.tel)}" inputmode="tel">
+    <label>Contato (pessoa)</label><input id="sc" value="${esc(s.contato)}">
+    <label>Observação</label><input id="so" value="${esc(s.obs)}">
+    <div id="serr" class="er hint"></div>
+    <button class="btn" id="ssave">Salvar</button>
+    ${row ? '<button class="btn sec red" style="background:#fff;color:#b91c1c;border-color:#b91c1c" id="sdel">Excluir da lista</button>' : ''}
+    <button class="btn sec" onclick="closeModal()">Cancelar</button>`);
+  $('#ssave').onclick = async () => {
+    const b = $('#ssave'); b.disabled = true;
+    try {
+      const r = await call('saveSupplier', { row: row, nome: $('#sn').value, tel: $('#st').value, contato: $('#sc').value, obs: $('#so').value });
+      if (!r.ok) { $('#serr').textContent = r.msg; b.disabled = false; return; }
+      setSuppliers(r.fornecedores, r.nome); closeModal(); toast('Fornecedor salvo ✔');
+    } catch (e) { $('#serr').textContent = e.message; b.disabled = false; }
+  };
+  if (row) $('#sdel').onclick = async () => {
+    if (!window.__delOk) { window.__delOk = 1; $('#sdel').textContent = 'Toque de novo para confirmar'; return; }
+    window.__delOk = 0;
+    try { const r = await call('deleteSupplier', row); setSuppliers(r.fornecedores); closeModal(); toast('Removido da lista. Os aparelhos já cadastrados mantêm o nome.'); }
+    catch (e) { $('#serr').textContent = e.message; }
+  };
+}
+
+/* ----- estoque ----- */
+let all = [], filt = 'Em estoque';
+const FILTS = ['Em estoque', 'Vendido', 'Outros', 'Todos'];
+function badge(s) { return '<span class="badge ' + (s === 'Em estoque' ? 'b-est' : s === 'Vendido' ? 'b-ven' : 'b-out') + '">' + esc(s) + '</span>'; }
+async function loadList() {
+  $('#list').innerHTML = '<div class="hint">Carregando…</div>';
+  try { all = await call('listDevices'); drawList(); } catch (e) { $('#list').textContent = 'Erro: ' + e.message; }
+}
+function drawList() {
+  $('#chips').innerHTML = FILTS.map(f => `<span class="chip ${f === filt ? 'on' : ''}" data-f="${f}">${f}</span>`).join('');
+  document.querySelectorAll('#chips .chip').forEach(c => c.onclick = () => { filt = c.dataset.f; drawList(); });
+  const q = $('#q').value.toLowerCase().trim();
+  const arr = all.filter(d => {
+    if (filt === 'Em estoque' && d.status !== 'Em estoque') return false;
+    if (filt === 'Vendido' && d.status !== 'Vendido') return false;
+    if (filt === 'Outros' && (d.status === 'Em estoque' || d.status === 'Vendido')) return false;
+    return !q || [d.i1, d.i2, d.modelo, d.cor, d.cli, d.ped, d.forn, d.id].join(' ').toLowerCase().includes(q);
+  });
+  $('#list').innerHTML = (arr.length ? '' : '<div class="hint">Nada encontrado.</div>') + arr.slice(0, 200).map(d => `
+    <div class="card item" data-id="${esc(d.id)}">
+      ${d.fotoId ? `<img class="thumb" loading="lazy" src="${THUMB}${esc(d.fotoId)}&sz=w160" onerror="this.style.visibility='hidden'">` : '<div class="thumb"></div>'}
+      <div class="info"><b>${esc(d.modelo)} · ${esc(d.cor)}</b> ${badge(d.status)}<br>
+        <span class="mono">${esc(d.i1)}</span>${d.i2 ? '<br><span class="mono">' + esc(d.i2) + '</span>' : ''}
+        ${d.status === 'Vendido' ? '<div class="hint">' + esc(d.dv) + ' · pedido ' + esc(d.ped) + (d.cli ? ' · ' + esc(d.cli) : '') + '</div>' : ''}
+        ${d.forn ? '<div class="hint">Forn.: ' + esc(d.forn) + '</div>' : ''}
+      </div></div>`).join('');
+  document.querySelectorAll('#list .card').forEach(c => c.onclick = () => openDevice(c.dataset.id));
+}
+$('#q').oninput = drawList;
+
+function openModal(html) { $('#sheet').innerHTML = html; $('#modal').classList.add('show'); }
+function closeModal() { $('#modal').classList.remove('show'); }
+$('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+
+function openDevice(id) {
+  const d = all.find(x => x.id === id); if (!d) return;
+  const acts = [];
+  if (d.status === 'Em estoque') acts.push(['Vendido', 'Marcar como vendido (manual)'], ['Devolvido ao fornecedor', 'Devolvido ao fornecedor'], ['Baixa (perda/furto)', 'Baixa (perda/furto)']);
+  else acts.push(['Em estoque', 'Voltar para o estoque']);
+  openModal(`
+    <b style="font-size:17px">${esc(d.modelo)} · ${esc(d.cor)}</b> ${badge(d.status)}
+    ${d.fotoId ? `<p><img style="width:100%;border-radius:10px" src="${THUMB}${esc(d.fotoId)}&sz=w800" onerror="this.style.display='none'"><br><a href="${esc(d.foto)}" target="_blank">Abrir foto no Drive</a></p>` : ''}
+    <p class="mono">IMEI 1: ${esc(d.i1)}${d.i2 ? '<br>IMEI 2: ' + esc(d.i2) : ''}</p>
+    <div class="hint">${esc(d.id)} · cadastrado em ${esc(d.cad)}${d.cond ? ' · ' + esc(d.cond) : ''}<br>
+    ${d.forn ? 'Fornecedor: ' + esc(d.forn) + '<br>' : ''}${d.nf ? 'Nota/Compra: ' + esc(d.nf) + '<br>' : ''}
+    ${d.status === 'Vendido' ? 'Venda: ' + esc(d.dv) + ' · pedido ' + esc(d.ped) + (d.cli ? ' · ' + esc(d.cli) : '') + (d.val !== '' ? ' · R$ ' + Number(d.val).toFixed(2).replace('.', ',') : '') + '<br>' : ''}
+    ${d.obs ? 'Obs.: ' + esc(d.obs) : ''}</div>
+    <label>Observação da mudança (opcional)</label><input id="note" placeholder="Ex.: devolvido na NF 123">
+    ${acts.map((a, i) => `<button class="btn ${i ? 'sec' : ''}" data-s="${esc(a[0])}">${esc(a[1])}</button>`).join('')}
+    <button class="btn sec" onclick="closeModal()">Fechar</button>`);
+  document.querySelectorAll('#sheet button[data-s]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const r = await call('setStatus', id, b.dataset.s, $('#note').value);
+      if (!r.ok) throw new Error(r.msg);
+      closeModal(); toast('Atualizado ✔'); loadList();
+    } catch (e) { toast('Erro: ' + e.message, 6000); b.disabled = false; }
+  });
+}
+
+/* ----- resumo ----- */
+async function loadSummary() {
+  try {
+    const s = await call('getSummary');
+    $('#kpis').innerHTML = `<div><span class="num">${s.totalStock}</span><br>em estoque</div><div><span class="num">${s.sold7}</span><br>vendidos 7 dias</div><div><span class="num">${s.sold30}</span><br>vendidos 30 dias</div>`;
+    $('#stk').innerHTML = s.estoque.length ? s.estoque.map(e => `<tr><td>${esc(e.nome)}</td><td>${e.qtd}</td></tr>`).join('') : '<tr><td>Sem aparelhos em estoque.</td></tr>';
+    $('#alerts').innerHTML = s.alerts.length ? s.alerts.map(a => `
+      <div style="border-top:1px solid #e2e8f0;padding:8px 0;font-size:14px"><b class="er">${esc(a.tipo)}</b><br><span class="mono">${esc(a.imei)}</span> · pedido ${esc(a.ped)}<div class="hint">${esc(a.det)}</div>
+      <button class="chip" onclick="resolveA(${a.row},this)">Marcar como resolvido</button></div>`).join('') : '<div class="hint ok" style="margin-top:6px">Nenhum alerta. ✔</div>';
+  } catch (e) { toast('Erro: ' + e.message, 6000); }
+}
+async function resolveA(row, el) { el.disabled = true; await call('resolveAlert', row); loadSummary(); }
+
+/* ----- config ----- */
+function paintStatus(s) {
+  $('#bstat').innerHTML = s.connected ? '<b class="ok">✔ Conectado ao Bling</b>' : '<b class="er">Não conectado</b>';
+  $('#credBox').classList.toggle('hide', s.connected);
+  $('#bconn').textContent = s.connected ? 'Reconectar ao Bling' : 'Conectar ao Bling';
+  $('#redir').value = s.redirect;
+  $('#sstat').innerHTML = (s.lastSync ? 'Última sincronização: ' + esc(s.lastSync) : 'Ainda não sincronizou.') +
+    '<br>Automático: ' + (s.auto ? '<b class="ok">ativo (10 em 10 min)</b>' : '<b class="er">desligado</b>') +
+    (s.lastError ? '<br><span class="er">Último erro: ' + esc(s.lastError) + '</span>' : '');
+  $('#auto').textContent = s.auto ? 'Desligar automático' : 'Ativar automático';
+  $('#auto').dataset.on = s.auto ? '1' : '';
+  $('#lsheet').href = s.sheetUrl; $('#lfolder').href = s.folderUrl;
+  window.__st = s;
+}
+async function loadStatus() { try { const d = await call('getInit'); paintStatus(d.status); } catch (e) { toast('Erro: ' + e.message, 6000); } }
+$('#bconn').onclick = async () => {
+  const st = window.__st || {};
+  try {
+    let r;
+    if (!st.connected || $('#cid').value) {
+      if (!$('#cid').value || !$('#csec').value) { $('#credBox').classList.remove('hide'); return toast('Preencha o Client ID e o Client Secret.'); }
+      r = await call('saveBlingCreds', $('#cid').value, $('#csec').value);
+    } else r = await call('blingAuthUrl');
+    window.open(r.url, '_blank');
+    toast('Autorize no Bling e depois toque em Config de novo para ver o status.', 7000);
+  } catch (e) { toast('Erro: ' + e.message, 6000); }
+};
+async function runSync(days, btn) {
+  btn.disabled = true; const t = btn.textContent; btn.textContent = 'Sincronizando…';
+  try {
+    const r = await call('syncSales', days);
+    if (!r.ok) toast(r.msg, 7000);
+    else toast(`Pedidos lidos: ${r.checked} · marcados vendidos: ${r.sold}` + (r.reverted ? ' · cancelados: ' + r.reverted : '') + (r.alerts ? ' · alertas: ' + r.alerts : '') + (r.partial ? ' (parcial, rode de novo)' : ''), 8000);
+  } catch (e) { toast('Erro: ' + e.message, 7000); }
+  btn.disabled = false; btn.textContent = t; loadStatus();
+}
+$('#sync').onclick = e => runSync(0, e.target);
+$('#sync30').onclick = e => runSync(30, e.target);
+$('#auto').onclick = async e => {
+  try { const s = await call(e.target.dataset.on ? 'disableAuto' : 'enableAuto'); paintStatus(s); toast(s.auto ? 'Sincronização automática ativada.' : 'Automático desligado.'); }
+  catch (x) { toast('Erro: ' + x.message, 6000); }
+};
+
+renderUnits(); initLists();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(function () {});
+</script>
+</body>
+</html>
